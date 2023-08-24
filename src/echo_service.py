@@ -9,10 +9,7 @@ class EchoService:
         Echoes the input message with a specific format. It calculates the length of the input
         message and prefixes it to the original message.
 
-        Args:
-            message: The input message to be echoed.
-
-        Returns:
-            The transformed message containing the length followed by the original message.
+        :param message: The input message to be echoed.
+        :return: The transformed message containing the length followed by the original message.
         """
         return f"{len(message)}:{message}"
