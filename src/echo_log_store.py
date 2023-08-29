@@ -1,6 +1,10 @@
 import sqlite3
 
 
+from alembic.config import Config
+import alembic
+
+
 class EchoLogStore:
     URL: str = "echo.db"
 
@@ -9,17 +13,9 @@ class EchoLogStore:
         return sqlite3.connect(EchoLogStore.URL)
 
     @staticmethod
-    def create_table() -> None:
-        with EchoLogStore.connect() as conn:
-            conn.execute(
-                """
-            CREATE TABLE IF NOT EXISTS echo_log (
-                id VARCHAR(255) NOT NULL PRIMARY KEY,
-                message VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP NOT NULL
-            );
-            """
-            )
+    def migrate() -> None:
+        alembic_cfg = Config("alembic.ini")
+        alembic.command.upgrade(alembic_cfg, "head")
 
     @staticmethod
     def insert_log(id: str, message: str, created_at: str) -> None:
@@ -41,6 +37,6 @@ class EchoLogStore:
 
 
 if __name__ == "__main__":
-    EchoLogStore.create_table()
+    EchoLogStore.migrate()
     EchoLogStore.insert_log("id1", "Hello, World!", "2023-08-18 10:30:00")
     EchoLogStore.print_logs()
