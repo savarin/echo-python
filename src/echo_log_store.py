@@ -1,16 +1,21 @@
-import sqlite3
-
+import datetime as dt
 
 from alembic.config import Config
 import alembic
+import sqlalchemy
+
+import echo_log_entity
+import echo_models
 
 
 class EchoLogStore:
-    URL: str = "echo.db"
+    URL: str = "sqlite:///echo.db"
 
     @staticmethod
-    def connect() -> sqlite3.Connection:
-        return sqlite3.connect(EchoLogStore.URL)
+    def connect() -> sqlalchemy.orm.Session:
+        engine = sqlalchemy.create_engine(EchoLogStore.URL)
+        Session = sqlalchemy.orm.sessionmaker(bind=engine)
+        return Session()
 
     @staticmethod
     def migrate() -> None:
@@ -18,25 +23,36 @@ class EchoLogStore:
         alembic.command.upgrade(alembic_cfg, "head")
 
     @staticmethod
-    def insert_log(id: str, message: str, created_at: str) -> None:
-        with EchoLogStore.connect() as conn:
-            conn.execute(
-                """
-            INSERT INTO echo_log (id, message, created_at) 
-            VALUES (?, ?, ?)
-            """,
-                (id, message, created_at),
-            )
+    def insert(log_entity: echo_log_entity.EchoLogEntity) -> None:
+        session: sqlalchemy.orm.Session = EchoLogStore.connect()
+
+        try:
+            log_record = log_entity.to_record()
+            session.add(log_record)
+            session.commit()
+        finally:
+            session.close()
 
     @staticmethod
     def print_logs() -> None:
-        with EchoLogStore.connect() as conn:
-            cursor: sqlite3.Cursor = conn.execute("SELECT * FROM echo_log")
-            for record in cursor.fetchall():
-                print(f"ID: {record[0]}, Message: {record[1]}, Created At: {record[2]}")
+        session: sqlalchemy.orm.Session = EchoLogStore.connect()
+
+        try:
+            for record in session.query(echo_models.EchoLog).all():
+                print(
+                    f"ID: {record.id}, Message: {record.message}, Created At: {record.created_at}"
+                )
+        finally:
+            session.close()
 
 
 if __name__ == "__main__":
     EchoLogStore.migrate()
-    EchoLogStore.insert_log("id1", "Hello, World!", "2023-08-18 10:30:00")
+    EchoLogStore.insert(
+        echo_log_entity.EchoLogEntity(
+            "id1",
+            "Hello, World!",
+            dt.datetime.strptime("2023-08-18 10:30:00", "%Y-%m-%d %H:%M:%S"),
+        )
+    )
     EchoLogStore.print_logs()
