@@ -3,6 +3,7 @@ import concurrent
 
 import grpc
 
+import echo_log_store
 import echo_pb2
 import echo_pb2_grpc
 import echo_service
@@ -69,7 +70,7 @@ class EchoServer:
 
 if __name__ == "__main__":
     # Creating an instance of the EchoService
-    echo_service_instance = echo_service.EchoService()
+    echo_service_instance = echo_service.EchoService(echo_log_store.EchoLogStore())
 
     # Creating an instance of the EchoServer class
     echo_server = EchoServer(echo_service_instance)

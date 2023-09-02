@@ -1,5 +1,7 @@
 import concurrent
 import grpc
+
+import echo_log_store
 import echo_pb2
 import echo_pb2_grpc
 import echo_service_rpc
@@ -16,7 +18,10 @@ class TestEchoServiceRpc:
         # Create server
         cls.server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=10))
         echo_pb2_grpc.add_EchoServiceServicer_to_server(
-            echo_service_rpc.EchoServiceRpc(echo_service.EchoService()), cls.server
+            echo_service_rpc.EchoServiceRpc(
+                echo_service.EchoService(echo_log_store.EchoLogStore())
+            ),
+            cls.server,
         )
 
         # Bind to a real port

@@ -1,4 +1,5 @@
 import datetime as dt
+import sys
 
 from alembic.config import Config
 import alembic
@@ -47,12 +48,15 @@ class EchoLogStore:
 
 
 if __name__ == "__main__":
-    EchoLogStore.migrate()
-    EchoLogStore.insert(
-        echo_log_entity.EchoLogEntity(
-            "id1",
-            "Hello, World!",
-            dt.datetime.strptime("2023-08-18 10:30:00", "%Y-%m-%d %H:%M:%S"),
+    if len(sys.argv) > 1 and sys.argv[1] == "migrate":
+        EchoLogStore.migrate()
+
+    else:
+        EchoLogStore.insert(
+            echo_log_entity.EchoLogEntity(
+                "id1",
+                "Hello, World!",
+                dt.datetime.strptime("2023-08-18 10:30:00", "%Y-%m-%d %H:%M:%S"),
+            )
         )
-    )
-    EchoLogStore.print_logs()
+        EchoLogStore.print_logs()
