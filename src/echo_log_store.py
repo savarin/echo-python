@@ -1,5 +1,6 @@
 import datetime as dt
 import sys
+from typing import List
 
 from alembic.config import Config
 import alembic
@@ -35,16 +36,27 @@ class EchoLogStore:
             session.close()
 
     @staticmethod
-    def print_logs() -> None:
+    def fetch_records() -> List[echo_models.EchoLog]:
         session: sqlalchemy.orm.Session = EchoLogStore.connect()
 
         try:
-            for record in session.query(echo_models.EchoLog).all():
-                print(
-                    f"ID: {record.id}, Message: {record.message}, Created At: {record.created_at}"
-                )
+            return session.query(echo_models.EchoLog).all()
         finally:
             session.close()
+
+    @staticmethod
+    def get_all() -> List[echo_log_entity.EchoLogEntity]:
+        return [
+            echo_log_entity.EchoLogEntity.from_record(record)
+            for record in EchoLogStore.fetch_records()
+        ]
+
+    @staticmethod
+    def print_logs() -> None:
+        for record in EchoLogStore.fetch_records():
+            print(
+                f"ID: {record.id}, Message: {record.message}, Created At: {record.created_at}"
+            )
 
 
 if __name__ == "__main__":
@@ -56,7 +68,7 @@ if __name__ == "__main__":
             echo_log_entity.EchoLogEntity(
                 "id1",
                 "Hello, World!",
-                dt.datetime.strptime("2023-08-18 10:30:00", "%Y-%m-%d %H:%M:%S"),
+                dt.datetime.now(dt.timezone.utc),
             )
         )
         EchoLogStore.print_logs()

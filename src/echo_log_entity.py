@@ -37,3 +37,11 @@ class EchoLogEntity:
             now = dt.datetime.now(dt.timezone.utc)
 
         return cls(id=id, message=message, created_at=now)
+
+    @classmethod
+    def from_record(cls, record: echo_models.EchoLog) -> "EchoLogEntity":
+        return cls(
+            id=str(record.id),
+            message=str(record.message),
+            created_at=record.created_at.replace(tzinfo=dt.timezone.utc),
+        )
